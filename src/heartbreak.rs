@@ -161,7 +161,58 @@ pub fn day3_part1() -> Result<(), Box<dyn std::error::Error>> {
                 }
                 result += num1.parse::<i32>()? * num2.parse::<i32>()?;
             }
-            i += 1
+            i += 1;
+        }
+    }
+
+    println!("{}", result);
+
+    Ok(())
+}
+
+pub fn day3_part2() -> Result<(), Box<dyn std::error::Error>> {
+    let v = fetch_data_day3()?;
+    let mut result = 0;
+
+    let mut doing = true;
+    for instr in v.iter() {
+        let mut i = 0;
+        while i < instr.len() - 4 {
+            if instr[i..i + 4] == *"mul(" {
+                i += 4;
+                let mut num1 = String::from("");
+                while i < instr.len() && is_digit(instr.chars().nth(i).unwrap()) && num1.len() <= 3
+                {
+                    num1.push(instr.chars().nth(i).unwrap());
+                    i += 1;
+                }
+                if i < instr.len() && (num1.is_empty() || instr.chars().nth(i).unwrap() != ',') {
+                    continue;
+                }
+                i += 1;
+                let mut num2 = String::from("");
+                while i < instr.len() && is_digit(instr.chars().nth(i).unwrap()) && num2.len() <= 3
+                {
+                    num2.push(instr.chars().nth(i).unwrap());
+                    i += 1;
+                }
+                if i < instr.len() && (num2.is_empty() || instr.chars().nth(i).unwrap() != ')') {
+                    continue;
+                }
+                if doing {
+                    result += num1.parse::<i32>()? * num2.parse::<i32>()?;
+                }
+                continue;
+            } else if instr[i..i + 4] == *"do()" {
+                doing = true;
+                i += 4;
+                continue;
+            } else if i + 7 < instr.len() && instr[i..i + 7] == *"don't()" {
+                doing = false;
+                i += 7;
+                continue;
+            }
+            i += 1;
         }
     }
 

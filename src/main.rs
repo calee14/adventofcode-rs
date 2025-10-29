@@ -5,7 +5,9 @@ use heartbreak::*;
 fn main() {
     println!("advent of code\n");
 
-    let solutions = [day1_part1, day1_part2, day2_part1, day2_part2, day3_part1];
+    let solutions = [
+        day1_part1, day1_part2, day2_part1, day2_part2, day3_part1, day3_part2,
+    ];
 
     for (day, sol) in solutions.iter().enumerate() {
         println!(
