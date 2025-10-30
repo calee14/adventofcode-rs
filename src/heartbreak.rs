@@ -1,7 +1,7 @@
 // 2025 was a heartbreak
 // solutions for 2025 advent of code
 
-use std::{cell::RefCell, collections::HashMap, rc::Rc};
+use std::{cell::RefCell, collections::HashMap, ops::Index, rc::Rc};
 
 use crate::read_input::{self, read_input};
 
@@ -221,7 +221,104 @@ pub fn day3_part2() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-pub fn fetch_data_day3() -> Result<Vec<String>, Box<dyn std::error::Error>> {
+fn fetch_data_day3() -> Result<Vec<String>, Box<dyn std::error::Error>> {
     let data_string = read_input::read_input("data/day3.txt")?;
+    Ok(data_string)
+}
+
+pub fn day4_part1() -> Result<(), Box<dyn std::error::Error>> {
+    let v = fetch_data_day4()?;
+    let cols = v.first().unwrap().len() as i32;
+    let rows = v.len() as i32;
+    let dirs: [(i32, i32); 8] = [
+        (0, 1),
+        (1, 1),
+        (1, 0),
+        (-1, 1),
+        (-1, 0),
+        (-1, -1),
+        (0, -1),
+        (1, -1),
+    ];
+    let in_range = |x: i32, y: i32| x >= 0 && x < rows && y >= 0 && y < cols;
+    let xmas = "XMAS";
+    let mut result = 0;
+    for i in 0..cols {
+        for j in 0..rows {
+            for dir in dirs.iter() {
+                let mut i_ = i;
+                let mut j_ = j;
+                let mut found = true;
+                for k in 0..4 {
+                    i_ += dir.0 * (if k == 0 { 0 } else { 1 });
+                    j_ += dir.1 * (if k == 0 { 0 } else { 1 });
+                    if in_range(j_, i_) {
+                        let s = v.get(j_ as usize).unwrap();
+                        let c = s.chars().nth(i_ as usize).unwrap();
+                        if c != xmas.chars().nth(k as usize).unwrap() {
+                            found = false;
+                        }
+                    } else {
+                        found = false;
+                    }
+                }
+                if found {
+                    result += 1;
+                }
+            }
+        }
+    }
+
+    println!("{}", result);
+    Ok(())
+}
+
+pub fn day4_part2() -> Result<(), Box<dyn std::error::Error>> {
+    let v = fetch_data_day4()?;
+    let cols = v.first().unwrap().len() as i32;
+    let rows = v.len() as i32;
+    let in_range = |x: i32, y: i32| x >= 0 && x < rows && y >= 0 && y < cols;
+    let char_at = |r: i32, c: i32| v.get(r as usize).unwrap().chars().nth(c as usize).unwrap();
+    let mut result = 0;
+    for i in 0..cols {
+        for j in 0..rows {
+            if v.get(j as usize).unwrap().chars().nth(i as usize).unwrap() == 'A' {
+                let tl = (i - 1, j - 1);
+                let tr = (i + 1, j - 1);
+                let bl = (i - 1, j + 1);
+                let br = (i + 1, j + 1);
+                if in_range(tl.1, tl.0)
+                    && in_range(tr.1, tr.0)
+                    && in_range(bl.1, bl.0)
+                    && in_range(br.1, br.0)
+                    && ((char_at(tl.1, tl.0) == 'M'
+                        && char_at(tr.1, tr.0) == 'M'
+                        && char_at(bl.1, bl.0) == 'S'
+                        && char_at(br.1, br.0) == 'S')
+                        || (char_at(tl.1, tl.0) == 'M'
+                            && char_at(tr.1, tr.0) == 'S'
+                            && char_at(bl.1, bl.0) == 'M'
+                            && char_at(br.1, br.0) == 'S')
+                        || (char_at(tl.1, tl.0) == 'S'
+                            && char_at(tr.1, tr.0) == 'S'
+                            && char_at(bl.1, bl.0) == 'M'
+                            && char_at(br.1, br.0) == 'M')
+                        || (char_at(tl.1, tl.0) == 'S'
+                            && char_at(tr.1, tr.0) == 'M'
+                            && char_at(bl.1, bl.0) == 'S'
+                            && char_at(br.1, br.0) == 'M'))
+                {
+                    result += 1;
+                }
+            }
+        }
+    }
+
+    println!("{}", result);
+    Ok(())
+}
+
+fn fetch_data_day4() -> Result<Vec<String>, Box<dyn std::error::Error>> {
+    let data_string = read_input::read_input("data/day4.txt")?;
     Ok(data_string)
 }
