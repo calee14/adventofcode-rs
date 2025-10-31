@@ -1,9 +1,12 @@
-// 2025 was a heartbreak
-// solutions for 2025 advent of code
+// 2024 was a heartbreak
+// solutions for 2024 advent of code
 
-use std::{cell::RefCell, collections::HashMap, ops::Index, rc::Rc};
+use std::{
+    collections::{HashMap, HashSet},
+    ops::Deref,
+};
 
-use crate::read_input::{self, read_input};
+use crate::read_input::{self};
 
 pub fn day1_part1() -> Result<(), Box<dyn std::error::Error>> {
     let (mut v1, mut v2) = fetch_data_day1()?;
@@ -321,4 +324,77 @@ pub fn day4_part2() -> Result<(), Box<dyn std::error::Error>> {
 fn fetch_data_day4() -> Result<Vec<String>, Box<dyn std::error::Error>> {
     let data_string = read_input::read_input("data/day4.txt")?;
     Ok(data_string)
+}
+
+pub fn day5_part1() -> Result<(), Box<dyn std::error::Error>> {
+    let (rules, pages) = fetch_data_day5()?;
+    let mut result = 0;
+    for page in pages.iter() {
+        let mut valid = true;
+        for i in 0..page.len() {
+            let curr = page[i];
+            for (j, comp) in page.iter().enumerate() {
+                if j < i {
+                    match rules.get(comp) {
+                        Some(map) if !map.contains(&curr) => {
+                            valid = false;
+                            break;
+                        }
+                        Some(_) => {}
+                        None => {
+                            valid = false;
+                            break;
+                        }
+                    }
+                } else if j > i {
+                    match rules.get(&curr) {
+                        Some(map) if !map.contains(comp) => {
+                            valid = false;
+                            break;
+                        }
+                        Some(_) => {}
+                        None => {
+                            valid = false;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        if valid {
+            // println!("found {}", page[page.len() / 2]);
+            result += page[page.len() / 2]
+        }
+    }
+    println!("{}", result);
+    Ok(())
+}
+type Day5Result = Result<(HashMap<i32, HashSet<i32>>, Vec<Vec<i32>>), Box<dyn std::error::Error>>;
+
+fn fetch_data_day5() -> Day5Result {
+    let data_string = read_input::read_input("data/day5.txt")?;
+    let mut iter = data_string.iter();
+    let mut rules: HashMap<i32, HashSet<i32>> = HashMap::new();
+    let mut pages: Vec<Vec<i32>> = Vec::new();
+    for s in iter.by_ref() {
+        if s.is_empty() {
+            break;
+        }
+        let nums = s
+            .split('|')
+            .map(|s| s.parse::<i32>().unwrap())
+            .collect::<Vec<i32>>();
+        let key = nums[0];
+        let val = nums[1];
+        rules.entry(key).or_default().insert(val);
+    }
+
+    for s in iter.by_ref() {
+        let nums = s
+            .split(',')
+            .map(|f| f.parse::<i32>().unwrap())
+            .collect::<Vec<i32>>();
+        pages.push(nums);
+    }
+    Ok((rules, pages))
 }
