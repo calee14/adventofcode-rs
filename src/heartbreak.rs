@@ -2,8 +2,8 @@
 // solutions for 2024 advent of code
 
 use std::{
+    cmp::Ordering,
     collections::{HashMap, HashSet},
-    ops::Deref,
 };
 
 use crate::read_input::{self};
@@ -329,7 +329,8 @@ fn fetch_data_day4() -> Result<Vec<String>, Box<dyn std::error::Error>> {
 pub fn day5_part1() -> Result<(), Box<dyn std::error::Error>> {
     let (rules, pages) = fetch_data_day5()?;
     let mut result = 0;
-    for page in pages.iter() {
+    let mut bad_pages: Vec<usize> = Vec::new();
+    for (i, page) in pages.iter().enumerate() {
         let mut valid = true;
         for i in 0..page.len() {
             let curr = page[i];
@@ -364,6 +365,47 @@ pub fn day5_part1() -> Result<(), Box<dyn std::error::Error>> {
         if valid {
             // println!("found {}", page[page.len() / 2]);
             result += page[page.len() / 2]
+        } else {
+            bad_pages.push(i);
+        }
+    }
+    println!("{}", result);
+    // Print the bad pages
+    bad_pages.iter().for_each(|p| print!("{},", p));
+    println!();
+    Ok(())
+}
+
+pub fn day5_part2() -> Result<(), Box<dyn std::error::Error>> {
+    let (rules, pages) = fetch_data_day5()?;
+    let indices: [usize; 96] = [
+        1, 3, 4, 8, 11, 13, 15, 16, 18, 22, 23, 24, 27, 28, 32, 36, 37, 38, 39, 43, 45, 47, 49, 50,
+        53, 55, 57, 58, 64, 66, 67, 69, 74, 75, 76, 78, 79, 80, 81, 82, 84, 87, 88, 90, 93, 94, 95,
+        96, 98, 100, 102, 103, 104, 106, 107, 108, 110, 112, 114, 115, 117, 119, 123, 128, 129,
+        130, 132, 133, 135, 139, 142, 143, 147, 149, 152, 154, 156, 158, 160, 161, 162, 163, 164,
+        167, 168, 169, 170, 172, 175, 177, 182, 183, 184, 193, 194, 196,
+    ];
+    let mut result = 0;
+    for p_idx in indices.iter() {
+        if let Some(page) = pages.get(*p_idx) {
+            let mut page_priors: Vec<(i32, i32)> = Vec::new();
+            for i in 0..page.len() {
+                let curr = page[i];
+                let mut prior_count = 0;
+                if let Some(map) = rules.get(&curr) {
+                    for (j, comp) in page.iter().enumerate() {
+                        if j != i && map.contains(comp) {
+                            prior_count += 1;
+                        }
+                    }
+                }
+                page_priors.push((curr, prior_count));
+            }
+            // Produce correct ordering after building
+            // list that tracks the amount of pages the
+            // a certain page comes before
+            page_priors.sort_by(|a, b| b.1.cmp(&a.1));
+            result += page_priors[page_priors.len() / 2].0;
         }
     }
     println!("{}", result);
