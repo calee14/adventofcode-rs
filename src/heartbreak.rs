@@ -503,6 +503,118 @@ pub fn day6_part1() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+pub fn day6_part2() -> Result<(), Box<dyn std::error::Error>> {
+    let mut data_string = fetch_data_day6()?;
+    let mut result = 0;
+    let mut curr_pos: (i32, i32) = (0, 0);
+    let max_row = data_string.len() as i32;
+    let max_col = data_string[0].len() as i32;
+    let in_range = |r: i32, c: i32| r >= 0 && r < max_row && c >= 0 && c < max_col;
+    let dirs: [(i32, i32); 4] = [(-1, 0), (0, 1), (1, 0), (0, -1)];
+    let mut curr_dir = 0;
+
+    // Find starting position
+    for i in 0..data_string.len() {
+        for j in 0..data_string[0].len() {
+            if data_string.get(i).unwrap().chars().nth(j).unwrap() == '^' {
+                curr_pos = (i as i32, j as i32);
+            }
+        }
+    }
+
+    // Follow rules to find path of gaurd
+    while in_range(curr_pos.0, curr_pos.1) {
+        let dir = dirs[curr_dir];
+        if in_range(curr_pos.0 + dir.0, curr_pos.1 + dir.1) {
+            let curr_is_hash = data_string
+                .get((curr_pos.0 + dir.0) as usize)
+                .unwrap()
+                .chars()
+                .nth((curr_pos.1 + dir.1) as usize)
+                .unwrap()
+                == '#';
+            if curr_is_hash {
+                curr_dir = if curr_dir + 1 < dirs.len() {
+                    curr_dir + 1
+                } else {
+                    0
+                };
+                continue;
+            }
+        }
+        if let Some(s) = data_string.get_mut(curr_pos.0 as usize) {
+            let mut chars: Vec<char> = s.chars().collect();
+
+            if let Some(c) = chars.get_mut(curr_pos.1 as usize)
+                && *c != '^'
+                && *c != 'O'
+            {
+                if curr_dir % 2 == 0 {
+                    *c = if *c == '-' || *c == '+' { '+' } else { '|' };
+                } else {
+                    *c = if *c == '|' || *c == '+' { '+' } else { '-' }
+                }
+                *s = chars.into_iter().collect();
+            }
+        }
+
+        curr_pos.0 += dir.0;
+        curr_pos.1 += dir.1;
+
+        // Check if we can add an obstacle which
+        // will make us turn right and hit an existing
+        // path
+        let mut temp_pos = curr_pos;
+        let temp_dir = if curr_dir + 1 < dirs.len() {
+            curr_dir + 1
+        } else {
+            0
+        };
+        let mut temp_path_len = 0;
+        let mut prev_cell = '.';
+        while in_range(temp_pos.0, temp_pos.1) {
+            let temp_dir_mod = dirs[temp_dir];
+            if in_range(temp_pos.0 + temp_dir_mod.0, temp_pos.1 + temp_dir_mod.1) {
+                let cell = data_string
+                    .get((temp_pos.0 + temp_dir_mod.0) as usize)
+                    .unwrap()
+                    .chars()
+                    .nth((temp_pos.1 + temp_dir_mod.1) as usize)
+                    .unwrap();
+                if cell == '^' && temp_path_len == 0 {
+                    break;
+                }
+                if cell == '#' && temp_path_len > 0 && prev_cell != '.' {
+                    if let Some(s) = data_string.get_mut((curr_pos.0 + dir.0) as usize) {
+                        let mut chars: Vec<char> = s.chars().collect();
+
+                        if let Some(c) = chars.get_mut((curr_pos.1 + dir.1) as usize)
+                            && *c != 'O'
+                            && *c != '#'
+                        {
+                            result += 1;
+                            *c = 'O';
+                            *s = chars.into_iter().collect();
+                        }
+                    }
+                    break;
+                }
+                prev_cell = cell;
+            }
+            temp_path_len += 1;
+            temp_pos.0 += temp_dir_mod.0;
+            temp_pos.1 += temp_dir_mod.1;
+        }
+    }
+
+    data_string.iter().for_each(|s| {
+        s.chars().for_each(|c| print!("{}", c));
+        println!();
+    });
+    println!("{}", result);
+    Ok(())
+}
+
 fn fetch_data_day6() -> Result<Vec<String>, Box<dyn std::error::Error>> {
     let data_string = read_input::read_input("data/day6.txt")?;
     Ok(data_string)
