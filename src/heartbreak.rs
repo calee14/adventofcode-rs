@@ -547,13 +547,8 @@ pub fn day6_part2() -> Result<(), Box<dyn std::error::Error>> {
 
             if let Some(c) = chars.get_mut(curr_pos.1 as usize)
                 && *c != '^'
-                && *c != 'O'
             {
-                if curr_dir % 2 == 0 {
-                    *c = if *c == '-' || *c == '+' { '+' } else { '|' };
-                } else {
-                    *c = if *c == '|' || *c == '+' { '+' } else { '-' }
-                }
+                *c = if *c == 'O' { 'X' } else { 'W' };
                 *s = chars.into_iter().collect();
             }
         }
@@ -584,16 +579,17 @@ pub fn day6_part2() -> Result<(), Box<dyn std::error::Error>> {
                 if cell == '^' && temp_path_len == 0 {
                     break;
                 }
-                if cell == '#' && temp_path_len > 0 && prev_cell != '.' {
+                if cell == '#' && temp_path_len > 0 && prev_cell != '.' && prev_cell != 'O' {
                     if let Some(s) = data_string.get_mut((curr_pos.0 + dir.0) as usize) {
                         let mut chars: Vec<char> = s.chars().collect();
 
                         if let Some(c) = chars.get_mut((curr_pos.1 + dir.1) as usize)
+                            && *c != 'W'
                             && *c != 'O'
                             && *c != '#'
                         {
                             result += 1;
-                            *c = 'O';
+                            *c = if *c == 'X' { 'W' } else { 'O' };
                             *s = chars.into_iter().collect();
                         }
                     }
