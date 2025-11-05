@@ -548,7 +548,7 @@ pub fn day6_part2() -> Result<(), Box<dyn std::error::Error>> {
             if let Some(c) = chars.get_mut(curr_pos.1 as usize)
                 && *c != '^'
             {
-                *c = if *c == 'O' { 'X' } else { 'W' };
+                *c = if *c == 'O' || *c == 'W' { 'W' } else { 'X' };
                 *s = chars.into_iter().collect();
             }
         }
@@ -614,4 +614,50 @@ pub fn day6_part2() -> Result<(), Box<dyn std::error::Error>> {
 fn fetch_data_day6() -> Result<Vec<String>, Box<dyn std::error::Error>> {
     let data_string = read_input::read_input("data/day6.txt")?;
     Ok(data_string)
+}
+
+fn tree_helper(curr: u64, i: usize, values: &Vec<u64>, target: &u64) -> bool {
+    if curr == *target {
+        return true;
+    }
+    if i == values.len() {
+        return false;
+    }
+    tree_helper(curr + values[i], i + 1, values, target)
+        || tree_helper(curr * values[i], i + 1, values, target)
+}
+
+pub fn day7_part1() -> Result<(), Box<dyn std::error::Error>> {
+    let lines = fetch_data_day7()?;
+    let mut result = 0;
+    for (sum, values) in lines.iter() {
+        if tree_helper(0, 0, values, sum) {
+            result += sum;
+        };
+    }
+    println!("{}", result);
+    Ok(())
+}
+fn fetch_data_day7() -> Result<Vec<(u64, Vec<u64>)>, Box<dyn std::error::Error>> {
+    let data_string = read_input::read_input("data/day7.txt")?;
+    let parsed_data = data_string
+        .iter()
+        .map(|s| {
+            let line_part = s.split(':').collect::<Vec<&str>>();
+            let sum = line_part.first().unwrap().parse::<u64>().unwrap();
+
+            let values = line_part[1]
+                .strip_prefix(' ')
+                .unwrap()
+                .split(' ')
+                .collect::<Vec<&str>>()
+                .iter()
+                .map(|s| s.parse::<u64>().unwrap())
+                .collect::<Vec<u64>>();
+
+            (sum, values)
+        })
+        .collect::<Vec<(u64, Vec<u64>)>>();
+
+    Ok(parsed_data)
 }
