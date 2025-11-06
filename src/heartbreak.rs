@@ -4,6 +4,7 @@
 use std::{
     cmp::Ordering,
     collections::{HashMap, HashSet},
+    iter,
 };
 
 use crate::read_input::{self};
@@ -556,50 +557,80 @@ pub fn day6_part2() -> Result<(), Box<dyn std::error::Error>> {
         curr_pos.0 += dir.0;
         curr_pos.1 += dir.1;
 
-        // Check if we can add an obstacle which
-        // will make us turn right and hit an existing
-        // path
+        // Check if we can find a loop
+        // 4 turns to make a loop
         let mut temp_pos = curr_pos;
-        let temp_dir = if curr_dir + 1 < dirs.len() {
-            curr_dir + 1
-        } else {
-            0
-        };
-        let mut temp_path_len = 0;
-        let mut prev_cell = '.';
-        while in_range(temp_pos.0, temp_pos.1) {
-            let temp_dir_mod = dirs[temp_dir];
-            if in_range(temp_pos.0 + temp_dir_mod.0, temp_pos.1 + temp_dir_mod.1) {
-                let cell = data_string
-                    .get((temp_pos.0 + temp_dir_mod.0) as usize)
-                    .unwrap()
-                    .chars()
-                    .nth((temp_pos.1 + temp_dir_mod.1) as usize)
-                    .unwrap();
-                if cell == '^' && temp_path_len == 0 {
-                    break;
-                }
-                if cell == '#' && temp_path_len > 0 && prev_cell != '.' && prev_cell != 'O' {
-                    if let Some(s) = data_string.get_mut((curr_pos.0 + dir.0) as usize) {
-                        let mut chars: Vec<char> = s.chars().collect();
-
-                        if let Some(c) = chars.get_mut((curr_pos.1 + dir.1) as usize)
-                            && *c != 'W'
-                            && *c != 'O'
-                            && *c != '#'
-                        {
-                            result += 1;
-                            *c = if *c == 'X' { 'W' } else { 'O' };
-                            *s = chars.into_iter().collect();
-                        }
-                    }
-                    break;
-                }
-                prev_cell = cell;
+        let temp_start_pos = temp_pos;
+        let mut temp_dir = curr_dir;
+        let mut has_loop = true;
+        let mut temp_reached_start = false;
+        let mut iter_count = 0;
+        loop {
+            if !has_loop || temp_reached_start {
+                break;
             }
-            temp_path_len += 1;
-            temp_pos.0 += temp_dir_mod.0;
-            temp_pos.1 += temp_dir_mod.1;
+            if !in_range(temp_pos.0, temp_pos.1) {
+                break;
+            }
+            temp_dir = if temp_dir + 1 < dirs.len() {
+                temp_dir + 1
+            } else {
+                0
+            };
+
+            let mut prev_cell = '.';
+            while in_range(temp_pos.0, temp_pos.1) {
+                let temp_dir_mod = dirs[temp_dir];
+                let next_pos = (temp_pos.0 + temp_dir_mod.0, temp_pos.1 + temp_dir_mod.1);
+                if in_range(next_pos.0, next_pos.1) {
+                    let next_cell = data_string
+                        .get((next_pos.0) as usize)
+                        .unwrap()
+                        .chars()
+                        .nth((next_pos.1) as usize)
+                        .unwrap();
+                    if iter_count > 0
+                        && temp_pos.0 == temp_start_pos.0
+                        && temp_pos.1 == temp_start_pos.1
+                    {
+                        temp_reached_start = true;
+                        break;
+                    } else if iter_count > 0
+                        && temp_pos.0 == temp_start_pos.0
+                        && temp_pos.1 == temp_start_pos.1
+                        && !has_loop
+                    {
+                        break;
+                    }
+                    if next_cell == '#' {
+                        iter_count += 1;
+                        if prev_cell == '.' || prev_cell == 'O' {
+                            has_loop = false;
+                        }
+                        break;
+                    }
+                    prev_cell = next_cell;
+                }
+                temp_pos.0 += temp_dir_mod.0;
+                temp_pos.1 += temp_dir_mod.1;
+            }
+
+            iter_count += 1;
+        }
+        if has_loop
+            && temp_reached_start
+            && let Some(s) = data_string.get_mut((curr_pos.0 + dir.0) as usize)
+        {
+            let mut chars: Vec<char> = s.chars().collect();
+
+            if let Some(c) = chars.get_mut((curr_pos.1 + dir.1) as usize)
+                && *c != '#'
+                && *c != '^'
+            {
+                result += 1;
+                *c = if *c == 'X' { 'W' } else { 'O' };
+                *s = chars.into_iter().collect();
+            }
         }
     }
 
