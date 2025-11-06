@@ -616,29 +616,77 @@ fn fetch_data_day6() -> Result<Vec<String>, Box<dyn std::error::Error>> {
     Ok(data_string)
 }
 
-fn tree_helper(curr: u64, i: usize, values: &Vec<u64>, target: &u64) -> bool {
+fn tree_helper_part1(curr: u64, i: usize, values: &Vec<u64>, target: &u64) -> bool {
     if curr == *target {
         return true;
     }
     if i == values.len() {
         return false;
     }
-    tree_helper(curr + values[i], i + 1, values, target)
-        || tree_helper(curr * values[i], i + 1, values, target)
+    tree_helper_part1(curr + values[i], i + 1, values, target)
+        || tree_helper_part1(curr * values[i], i + 1, values, target)
 }
 
 pub fn day7_part1() -> Result<(), Box<dyn std::error::Error>> {
     let lines = fetch_data_day7()?;
     let mut result = 0;
     for (sum, values) in lines.iter() {
-        if tree_helper(0, 0, values, sum) {
+        if tree_helper_part1(0, 0, values, sum) {
             result += sum;
         };
     }
     println!("{}", result);
     Ok(())
 }
-fn fetch_data_day7() -> Result<Vec<(u64, Vec<u64>)>, Box<dyn std::error::Error>> {
+
+fn tree_helper_part2(curr: u64, i: usize, values: &Vec<u64>, target: &u64) -> bool {
+    if curr == *target && i == values.len() {
+        return true;
+    }
+    if i == values.len() || curr > *target {
+        return false;
+    }
+
+    let add_result = curr
+        .checked_add(values[i])
+        .map(|new_curr| tree_helper_part2(new_curr, i + 1, values, target))
+        .unwrap_or(false);
+    if add_result {
+        return true;
+    }
+
+    let mul_result = curr
+        .checked_mul(values[i])
+        .map(|new_curr| tree_helper_part2(new_curr, i + 1, values, target))
+        .unwrap_or(false);
+    if mul_result {
+        return true;
+    }
+
+    let digits = values[i].to_string().len() as u32;
+
+    10u64
+        .checked_pow(digits)
+        .and_then(|multiplier| curr.checked_mul(multiplier))
+        .and_then(|shifted| shifted.checked_add(values[i]))
+        .map(|new_curr| tree_helper_part2(new_curr, i + 1, values, target))
+        .unwrap_or(false)
+}
+
+pub fn day7_part2() -> Result<(), Box<dyn std::error::Error>> {
+    let lines = fetch_data_day7()?;
+    let mut result = 0;
+    for (sum, values) in lines.iter() {
+        if tree_helper_part2(0, 0, values, sum) {
+            result += sum;
+        };
+    }
+    println!("{}", result);
+    Ok(())
+}
+
+type Day7Result = Result<Vec<(u64, Vec<u64>)>, Box<dyn std::error::Error>>;
+fn fetch_data_day7() -> Day7Result {
     let data_string = read_input::read_input("data/day7.txt")?;
     let parsed_data = data_string
         .iter()
