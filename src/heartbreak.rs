@@ -565,6 +565,8 @@ pub fn day6_part2() -> Result<(), Box<dyn std::error::Error>> {
         let mut has_loop = true;
         let mut temp_reached_start = false;
         let mut iter_count = 0;
+        let new_wall_pos = (curr_pos.0 + dir.0, curr_pos.1 + dir.1);
+
         loop {
             if !has_loop || temp_reached_start {
                 break;
@@ -602,7 +604,9 @@ pub fn day6_part2() -> Result<(), Box<dyn std::error::Error>> {
                     {
                         break;
                     }
-                    if next_cell == '#' {
+                    if next_cell == '#'
+                        || next_pos.0 == new_wall_pos.0 && next_pos.1 == new_wall_pos.1
+                    {
                         iter_count += 1;
                         if prev_cell == '.' || prev_cell == 'O' {
                             has_loop = false;
