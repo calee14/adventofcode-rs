@@ -793,6 +793,63 @@ pub fn day8_part1() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+pub fn day8_part2() -> Result<(), Box<dyn std::error::Error>> {
+    let grid = fetch_data_day8()?;
+    let in_grid =
+        |r: i32, c: i32| r >= 0 && r < grid.len() as i32 && c >= 0 && c < grid[0].len() as i32;
+
+    let mut freqs: HashMap<char, Vec<(i32, i32)>> = HashMap::new();
+
+    for r in 0..grid.len() {
+        for c in 0..grid[0].len() {
+            if grid[r][c] != '.' {
+                freqs
+                    .entry(grid[r][c])
+                    .or_default()
+                    .push((r as i32, c as i32));
+            }
+        }
+    }
+
+    // Track the antinodes that we have seen
+    let mut seen: HashSet<(i32, i32)> = HashSet::new();
+    for freq_points in freqs.values() {
+        for &pos in freq_points {
+            seen.insert(pos);
+        }
+        for freq1 in 0..freq_points.len() {
+            for freq2 in freq1 + 1..freq_points.len() {
+                let dx = freq_points[freq1].0 - freq_points[freq2].0;
+                let dy = freq_points[freq1].1 - freq_points[freq2].1;
+
+                let mut anti1 = (freq_points[freq1].0, freq_points[freq1].1);
+                loop {
+                    anti1.0 += dx;
+                    anti1.1 += dy;
+                    if in_grid(anti1.0, anti1.1) {
+                        seen.insert((anti1.0, anti1.1));
+                    } else {
+                        break;
+                    }
+                }
+
+                let mut anti2 = (freq_points[freq2].0, freq_points[freq2].1);
+                loop {
+                    anti2.0 -= dx;
+                    anti2.1 -= dy;
+                    if in_grid(anti2.0, anti2.1) {
+                        seen.insert((anti2.0, anti2.1));
+                    } else {
+                        break;
+                    }
+                }
+            }
+        }
+    }
+    println!("{}", seen.len());
+    Ok(())
+}
+
 fn fetch_data_day8() -> Result<Vec<Vec<char>>, Box<dyn std::error::Error>> {
     let data_string = read_input::read_input("data/day8.txt")?;
     let grid = data_string
