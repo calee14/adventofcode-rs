@@ -744,3 +744,60 @@ fn fetch_data_day7() -> Day7Result {
 
     Ok(parsed_data)
 }
+
+pub fn day8_part1() -> Result<(), Box<dyn std::error::Error>> {
+    let grid = fetch_data_day8()?;
+    let in_grid =
+        |r: i32, c: i32| r >= 0 && r < grid.len() as i32 && c >= 0 && c < grid[0].len() as i32;
+
+    let mut freqs: HashMap<char, Vec<(i32, i32)>> = HashMap::new();
+
+    for r in 0..grid.len() {
+        for c in 0..grid[0].len() {
+            if grid[r][c] != '.' {
+                freqs
+                    .entry(grid[r][c])
+                    .or_default()
+                    .push((r as i32, c as i32));
+            }
+        }
+    }
+
+    let mut result = 0;
+    // Track the antinodes that we have seen
+    let mut seen: HashSet<(i32, i32)> = HashSet::new();
+    for freq_points in freqs.values() {
+        for freq1 in 0..freq_points.len() {
+            for freq2 in freq1 + 1..freq_points.len() {
+                let dx = freq_points[freq1].0 - freq_points[freq2].0;
+                let dy = freq_points[freq1].1 - freq_points[freq2].1;
+
+                let anti1 = (freq_points[freq1].0 + dx, freq_points[freq1].1 + dy);
+                if !seen.contains(&anti1)
+                    && in_grid(freq_points[freq1].0 + dx, freq_points[freq1].1 + dy)
+                {
+                    seen.insert((freq_points[freq1].0 + dx, freq_points[freq1].1 + dy));
+                    result += 1;
+                }
+                let anti2 = (freq_points[freq2].0 - dx, freq_points[freq2].1 - dy);
+                if !seen.contains(&anti2)
+                    && in_grid(freq_points[freq2].0 - dx, freq_points[freq2].1 - dy)
+                {
+                    seen.insert((freq_points[freq2].0 - dx, freq_points[freq2].1 - dy));
+                    result += 1;
+                }
+            }
+        }
+    }
+    println!("{}", result);
+    Ok(())
+}
+
+fn fetch_data_day8() -> Result<Vec<Vec<char>>, Box<dyn std::error::Error>> {
+    let data_string = read_input::read_input("data/day8.txt")?;
+    let grid = data_string
+        .iter()
+        .map(|s| s.chars().collect())
+        .collect::<Vec<Vec<char>>>();
+    Ok(grid)
+}
