@@ -858,3 +858,68 @@ fn fetch_data_day8() -> Result<Vec<Vec<char>>, Box<dyn std::error::Error>> {
         .collect::<Vec<Vec<char>>>();
     Ok(grid)
 }
+
+pub fn day9_part1() -> Result<(), Box<dyn std::error::Error>> {
+    let data = fetch_data_day9()?;
+
+    let mut file_blocks: Vec<(i32, u32)> = Vec::new();
+    let mut num_files = 0;
+    data.iter().enumerate().for_each(|(i, val)| {
+        if i % 2 == 0 {
+            file_blocks.push((num_files, *val));
+            num_files += 1;
+        } else {
+            file_blocks.push((-1, *val));
+        }
+    });
+    let mut result: u64 = 0;
+    let mut disk_map_idx = 0;
+    while !file_blocks.is_empty() {
+        let block = file_blocks.first().unwrap();
+        let block_idx = block.0;
+        let block_size = block.1;
+
+        if block_idx >= 0 {
+            for _ in 0..block_size {
+                result += (disk_map_idx * block_idx) as u64;
+                disk_map_idx += 1;
+            }
+            if !file_blocks.is_empty() {
+                file_blocks.remove(0);
+            }
+        } else {
+            for _ in 0..block_size {
+                // Keep removing empty blocks from the end
+                while file_blocks.last().is_some_and(|b| b.1 == 0 || b.0 < 0) {
+                    file_blocks.pop();
+                }
+
+                if file_blocks.is_empty() {
+                    break;
+                }
+                let last_block: &mut (i32, u32) = file_blocks.last_mut().unwrap();
+                result += (disk_map_idx * last_block.0) as u64;
+                disk_map_idx += 1;
+                last_block.1 -= 1;
+            }
+            if !file_blocks.is_empty() {
+                file_blocks.remove(0);
+            }
+        }
+    }
+
+    println!("{}", result);
+
+    Ok(())
+}
+
+fn fetch_data_day9() -> Result<Vec<u32>, Box<dyn std::error::Error>> {
+    let data_string = read_input::read_input("data/day9.txt")?;
+    let grid = data_string
+        .first()
+        .unwrap()
+        .chars()
+        .map(|c| c.to_digit(10).unwrap())
+        .collect::<Vec<u32>>();
+    Ok(grid)
+}
