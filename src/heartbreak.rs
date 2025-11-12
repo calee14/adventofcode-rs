@@ -913,6 +913,82 @@ pub fn day9_part1() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+pub fn day9_part2() -> Result<(), Box<dyn std::error::Error>> {
+    let data = fetch_data_day9()?;
+
+    let mut file_blocks: Vec<(i32, u32)> = Vec::new();
+    let mut num_files = 0;
+
+    data.iter().enumerate().for_each(|(i, val)| {
+        if i % 2 == 0 {
+            file_blocks.push((num_files, *val));
+            num_files += 1;
+        } else {
+            file_blocks.push((-1, *val));
+        }
+    });
+
+    let mut curr: i32 = file_blocks.len() as i32 - 1;
+    while curr >= 0 {
+        let (block_id, block_size) = *file_blocks.get(curr as usize).unwrap();
+
+        if block_id >= 0 {
+            let mut free_idx: i32 = -1;
+            for (i, temp_block) in file_blocks.iter().enumerate() {
+                if i > curr as usize {
+                    break;
+                }
+
+                if temp_block.0 == -1 && temp_block.1 >= block_size {
+                    // modify the file block
+                    // fileblocks remove element at i and replace with
+                    // (block_id, block_size) + (-1, temp_block.1 - )
+                    free_idx = i as i32;
+                    break;
+                }
+            }
+            if free_idx != -1 {
+                // Replace the current block with free space
+                file_blocks[curr as usize] = (-1, block_size);
+
+                // Handle the free block we found
+                let free_block = file_blocks.remove(free_idx as usize);
+                file_blocks.insert(free_idx as usize, (block_id, block_size));
+
+                if free_block.1 - block_size > 0 {
+                    // Insert remaining free space after the moved block
+                    let new_free_block = (-1, free_block.1 - block_size);
+                    file_blocks.insert(free_idx as usize + 1, new_free_block);
+                    // curr stays the same because we inserted before it (shifts it right by 1)
+                } else {
+                    // We used the entire free block, so curr shifts left by 1
+                    curr -= 1;
+                }
+            }
+        }
+        curr -= 1;
+    }
+
+    let mut result: u64 = 0;
+    let mut disk_map_idx = 0;
+
+    while !file_blocks.is_empty() {
+        let (block_id, block_size) = file_blocks.remove(0);
+        if block_id >= 0 {
+            for _ in 0..block_size {
+                result += disk_map_idx as u64 * block_id as u64;
+                disk_map_idx += 1;
+            }
+        } else {
+            disk_map_idx += block_size;
+        }
+    }
+
+    println!("{}", result);
+
+    Ok(())
+}
+
 fn fetch_data_day9() -> Result<Vec<u32>, Box<dyn std::error::Error>> {
     let data_string = read_input::read_input("data/day9.txt")?;
     let grid = data_string
