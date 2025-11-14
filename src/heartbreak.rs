@@ -1045,6 +1045,46 @@ pub fn day10_part1() -> Result<(), Box<dyn std::error::Error>> {
     println!("{}", result);
     Ok(())
 }
+
+fn travel_helper_part2(i: usize, j: usize, grid: &Vec<Vec<i32>>) -> u32 {
+    if grid[i][j] == 9 {
+        return 1;
+    }
+    let in_range =
+        |i: i32, j: i32| i >= 0 && i < grid.len() as i32 && j >= 0 && j < grid[0].len() as i32;
+
+    let dirs = [(1, 0), (0, 1), (-1, 0), (0, -1)];
+
+    let mut sub_total = 0;
+    for dir in dirs {
+        let new_i = i as i32 + dir.0;
+        let new_j = j as i32 + dir.1;
+        if in_range(new_i, new_j) && grid[i][j] + 1 == grid[new_i as usize][new_j as usize] {
+            sub_total += travel_helper_part2(new_i as usize, new_j as usize, grid);
+        }
+    }
+    sub_total
+}
+
+pub fn day10_part2() -> Result<(), Box<dyn std::error::Error>> {
+    let data = fetch_data_day10()?;
+    let mut starts: Vec<(usize, usize)> = Vec::new();
+    for i in 0..data.len() {
+        for j in 0..data[0].len() {
+            if data[i][j] == 0 {
+                starts.push((i, j));
+            }
+        }
+    }
+
+    let mut result = 0;
+    for s in starts {
+        result += travel_helper_part2(s.0, s.1, &data);
+    }
+    println!("{}", result);
+    Ok(())
+}
+
 fn fetch_data_day10() -> Result<Vec<Vec<i32>>, Box<dyn std::error::Error>> {
     let data_string = read_input::read_input("data/day10.txt")?;
     let grid = data_string
