@@ -999,3 +999,62 @@ fn fetch_data_day9() -> Result<Vec<u32>, Box<dyn std::error::Error>> {
         .collect::<Vec<u32>>();
     Ok(grid)
 }
+
+fn travel_helper(i: usize, j: usize, grid: &Vec<Vec<i32>>, seen: &mut HashSet<(i32, i32)>) -> u32 {
+    if grid[i][j] == 9 {
+        let pos = (i as i32, j as i32);
+        if !seen.contains(&pos) {
+            seen.insert(pos);
+            return 1;
+        } else {
+            return 0;
+        }
+    }
+    let in_range =
+        |i: i32, j: i32| i >= 0 && i < grid.len() as i32 && j >= 0 && j < grid[0].len() as i32;
+
+    let dirs = [(1, 0), (0, 1), (-1, 0), (0, -1)];
+
+    let mut sub_total = 0;
+    for dir in dirs {
+        let new_i = i as i32 + dir.0;
+        let new_j = j as i32 + dir.1;
+        if in_range(new_i, new_j) && grid[i][j] + 1 == grid[new_i as usize][new_j as usize] {
+            sub_total += travel_helper(new_i as usize, new_j as usize, grid, seen);
+        }
+    }
+    sub_total
+}
+
+pub fn day10_part1() -> Result<(), Box<dyn std::error::Error>> {
+    let data = fetch_data_day10()?;
+    let mut starts: Vec<(usize, usize)> = Vec::new();
+    for i in 0..data.len() {
+        for j in 0..data[0].len() {
+            if data[i][j] == 0 {
+                starts.push((i, j));
+            }
+        }
+    }
+
+    let mut result = 0;
+    for s in starts {
+        let mut seen = HashSet::new();
+        result += travel_helper(s.0, s.1, &data, &mut seen);
+    }
+    println!("{}", result);
+    Ok(())
+}
+fn fetch_data_day10() -> Result<Vec<Vec<i32>>, Box<dyn std::error::Error>> {
+    let data_string = read_input::read_input("data/day10.txt")?;
+    let grid = data_string
+        .iter()
+        .map(|line| {
+            line.chars()
+                .map(|c| c.to_digit(10).map(|d| d as i32).unwrap_or(-1))
+                .collect::<Vec<i32>>()
+        })
+        .collect::<Vec<Vec<i32>>>();
+
+    Ok(grid)
+}
