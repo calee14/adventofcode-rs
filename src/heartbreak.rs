@@ -1098,3 +1098,105 @@ fn fetch_data_day10() -> Result<Vec<Vec<i32>>, Box<dyn std::error::Error>> {
 
     Ok(grid)
 }
+
+#[derive(Debug, Clone)]
+struct Node {
+    value: i64,
+    next: Option<usize>,
+}
+
+fn num_digits(n: i64) -> usize {
+    n.abs().to_string().len()
+}
+
+pub fn day11_part1() -> Result<(), Box<dyn std::error::Error>> {
+    let data = fetch_data_day11()?;
+
+    let mut nodes: Vec<Node> = Vec::new();
+
+    nodes.push(Node {
+        value: -1,
+        next: Some(1),
+    });
+
+    for num in data.iter() {
+        nodes.push(Node {
+            value: *num,
+            next: Some(nodes.len() + 1),
+        });
+    }
+    nodes.last_mut().unwrap().next = None;
+
+    for _ in 0..25 {
+        let mut curr = nodes.first().unwrap().next;
+        let mut prev = 0;
+        loop {
+            let mut new_prev = curr;
+            let node = nodes.get(curr.unwrap_or(0)).unwrap();
+            let curr_node_value = node.value;
+            let curr_node_next = node.next;
+            if curr_node_value == -1 {
+                curr = curr_node_next;
+                continue;
+            } else if curr_node_value == 0 {
+                nodes.get_mut(curr.unwrap_or(0)).unwrap().value = 1;
+                curr = curr_node_next;
+            } else if num_digits(curr_node_value).is_multiple_of(2) {
+                let num_str = curr_node_value.abs().to_string().clone();
+                let first_half = &num_str[..num_str.len() / 2];
+                let second_half = &num_str[num_str.len() / 2..];
+                let first_node = Node {
+                    value: first_half.parse::<i64>().unwrap(),
+                    next: Some(nodes.len() + 1),
+                };
+                nodes.push(first_node);
+                nodes.get_mut(prev).unwrap().next = nodes.len().checked_sub(1);
+                let second_node = Node {
+                    value: second_half.parse::<i64>().unwrap(),
+                    next: curr_node_next,
+                };
+                nodes.push(second_node);
+                // Need to update previous and next nodes
+                // for the main loop
+                new_prev = Some(nodes.len() - 1);
+                curr = curr_node_next;
+            } else {
+                nodes.get_mut(curr.unwrap_or(0)).unwrap().value *= 2024;
+                curr = curr_node_next;
+            }
+            if curr.is_none() {
+                break;
+            }
+            prev = new_prev.unwrap();
+        }
+        // nodes.iter().for_each(|n| print!("{} ", n.value));
+        // println!("");
+    }
+
+    // println!("");
+    // println!("");
+    let mut curr = Some(0);
+    let mut result = 0;
+    loop {
+        if curr.is_none() {
+            break;
+        }
+        result += 1;
+        curr = nodes.get(curr.unwrap_or(0)).unwrap().next;
+        // print!("{} ", nodes.get(curr.unwrap_or(0)).unwrap().value);
+    }
+
+    // println!("");
+    println!("{}", result - 1);
+
+    Ok(())
+}
+
+fn fetch_data_day11() -> Result<Vec<i64>, Box<dyn std::error::Error>> {
+    let data_string = read_input::read_input("data/day11.txt")?;
+    let data = data_string[0]
+        .split(' ')
+        .map(|f| f.parse::<i64>().unwrap())
+        .collect::<Vec<i64>>();
+    Ok(data)
+}
