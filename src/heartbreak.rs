@@ -1192,6 +1192,42 @@ pub fn day11_part1() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+fn stone_helper(stone: i64, blinks: u32, memo: &mut HashMap<(i64, u32), i64>) -> i64 {
+    if blinks == 0 {
+        return 1;
+    }
+    if let Some(&result) = memo.get(&(stone, blinks)) {
+        return result;
+    }
+    let result = if stone == 0 {
+        stone_helper(1, blinks - 1, memo)
+    } else {
+        let num_str = stone.to_string();
+        let num_size = num_digits(stone);
+        if num_size.is_multiple_of(2) {
+            let first_half = &num_str[..num_str.len() / 2].parse::<i64>().unwrap_or(0);
+            let second_half = &num_str[num_str.len() / 2..].parse::<i64>().unwrap_or(0);
+
+            stone_helper(*first_half, blinks - 1, memo)
+                + stone_helper(*second_half, blinks - 1, memo)
+        } else {
+            stone_helper(stone * 2024, blinks - 1, memo)
+        }
+    };
+
+    memo.insert((stone, blinks), result);
+    result
+}
+
+pub fn day11_part2() -> Result<(), Box<dyn std::error::Error>> {
+    let data = fetch_data_day11()?;
+    let mut memo: HashMap<(i64, u32), i64> = HashMap::new();
+    let result: i64 = data.iter().map(|s| stone_helper(*s, 75, &mut memo)).sum();
+    println!("{}", result);
+
+    Ok(())
+}
+
 fn fetch_data_day11() -> Result<Vec<i64>, Box<dyn std::error::Error>> {
     let data_string = read_input::read_input("data/day11.txt")?;
     let data = data_string[0]
