@@ -1236,3 +1236,72 @@ fn fetch_data_day11() -> Result<Vec<i64>, Box<dyn std::error::Error>> {
         .collect::<Vec<i64>>();
     Ok(data)
 }
+
+fn region_helper(i: usize, j: usize, region: char, grid: &mut Vec<Vec<char>>) -> (i32, i32) {
+    let directions: [(i32, i32); 4] = [(0, 1), (1, 0), (-1, 0), (0, -1)];
+    let grid_rows = grid.len() as i32;
+    let grid_cols = grid[0].len() as i32;
+    let in_range = |x: i32, y: i32| x >= 0 && x < grid_rows && y >= 0 && y < grid_cols;
+
+    let mut area = 0;
+    let mut edges = 0;
+
+    grid[i][j] = region.to_ascii_lowercase();
+
+    for dir in directions {
+        let new_i = i as i32 + dir.0;
+        let new_j = j as i32 + dir.1;
+        if in_range(new_i, new_j) {
+            if grid[new_i as usize][new_j as usize] == region.to_ascii_lowercase() {
+                continue;
+            } else if grid[new_i as usize][new_j as usize] != region {
+                edges += 1;
+            } else if grid[new_i as usize][new_j as usize] == region {
+                let (other_area, other_perim) =
+                    region_helper(new_i as usize, new_j as usize, region, grid);
+                area += other_area;
+                edges += other_perim;
+            }
+        } else {
+            edges += 1;
+        }
+    }
+
+    area += 1;
+    (area, edges)
+}
+
+pub fn day12_part1() -> Result<(), Box<dyn std::error::Error>> {
+    let mut data = fetch_data_day12()?;
+
+    let mut result = 0;
+    for i in 0..data.len() {
+        for j in 0..data[0].len() {
+            // Count boundary edges a cell in
+            // the region has and count the area
+            // of the region
+            let region = data[i][j];
+            if region.is_lowercase() {
+                continue;
+            }
+            // data.iter().for_each(|r| {
+            //     r.iter().for_each(|c| print!("{}", c));
+            //     println!();
+            // });
+            let (area, perim) = region_helper(i, j, region, &mut data);
+            result += area * perim;
+            // println!("{},{}", area, perim);
+        }
+    }
+    println!("{}", result);
+    Ok(())
+}
+
+fn fetch_data_day12() -> Result<Vec<Vec<char>>, Box<dyn std::error::Error>> {
+    let data_string = read_input::read_input("data/day12.txt")?;
+    let grid = data_string
+        .iter()
+        .map(|s| s.chars().collect::<Vec<char>>())
+        .collect::<Vec<Vec<char>>>();
+    Ok(grid)
+}
