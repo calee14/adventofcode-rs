@@ -1297,6 +1297,101 @@ pub fn day12_part1() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+fn count_corners_helper(i: usize, j: usize, region: char, grid: &mut Vec<Vec<char>>) -> (i32, i32) {
+    let directions: [(i32, i32); 4] = [(0, 1), (1, 0), (-1, 0), (0, -1)];
+    let grid_rows = grid.len() as i32;
+    let grid_cols = grid[0].len() as i32;
+    let in_range = |x: i32, y: i32| x >= 0 && x < grid_rows && y >= 0 && y < grid_cols;
+
+    // Mark grid cell as visitied before
+    // reading from grid var
+    grid[i][j] = region.to_ascii_lowercase();
+
+    let is_region = |x: i32, y: i32, grid: &Vec<Vec<char>>| -> bool {
+        if in_range(x, y) {
+            let val = grid[x as usize][y as usize];
+            val == region || val == region.to_ascii_lowercase()
+        } else {
+            false
+        }
+    };
+
+    let mut area = 1;
+    let mut corners = 0;
+
+    let ci = i as i32;
+    let cj = j as i32;
+
+    // Check top left corner
+    let top = is_region(ci - 1, cj, grid);
+    let left = is_region(ci, cj - 1, grid);
+    let top_left = is_region(ci - 1, cj - 1, grid);
+    if (!top && !left) || (top && left && !top_left) {
+        corners += 1;
+    }
+    // Check top right corner
+    let right = is_region(ci, cj + 1, grid);
+    let top_right = is_region(ci - 1, cj + 1, grid);
+    if (!top && !right) || (top && right && !top_right) {
+        corners += 1;
+    }
+    // Check bottom left corner
+    let bottom = is_region(ci + 1, cj, grid);
+    let bottom_left = is_region(ci + 1, cj - 1, grid);
+    if (!bottom && !left) || (bottom && left && !bottom_left) {
+        corners += 1;
+    }
+    // Check bottom right corner
+    let bottom_right = is_region(ci + 1, cj + 1, grid);
+    if (!bottom && !right) || (bottom && right && !bottom_right) {
+        corners += 1;
+    }
+
+    for dir in directions {
+        let new_i = ci + dir.0;
+        let new_j = cj + dir.1;
+
+        if new_i >= 0
+            && new_i < grid_rows
+            && new_j >= 0
+            && new_j < grid_cols
+            && grid[new_i as usize][new_j as usize] == region
+        {
+            let (other_area, other_corners) =
+                count_corners_helper(new_i as usize, new_j as usize, region, grid);
+            area += other_area;
+            corners += other_corners;
+        }
+    }
+    (area, corners)
+}
+
+pub fn day12_part2() -> Result<(), Box<dyn std::error::Error>> {
+    let mut data = fetch_data_day12()?;
+
+    let mut result = 0;
+    for i in 0..data.len() {
+        for j in 0..data[0].len() {
+            // Count boundary edges a cell in
+            // the region has and count the area
+            // of the region
+            let region = data[i][j];
+            if region.is_lowercase() {
+                continue;
+            }
+            // data.iter().for_each(|r| {
+            //     r.iter().for_each(|c| print!("{}", c));
+            //     println!();
+            // });
+            let (area, sides) = count_corners_helper(i, j, region, &mut data);
+            result += area * sides;
+            // println!("{},{}", area, perim);
+        }
+    }
+    println!("{}", result);
+    Ok(())
+}
+
 fn fetch_data_day12() -> Result<Vec<Vec<char>>, Box<dyn std::error::Error>> {
     let data_string = read_input::read_input("data/day12.txt")?;
     let grid = data_string

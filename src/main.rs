@@ -14,6 +14,7 @@ fn main() {
         day11_part1,
         day11_part2,
         day12_part1,
+        day12_part2,
     ];
 
     for (day, sol) in solutions.iter().enumerate() {
