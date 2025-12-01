@@ -47,7 +47,7 @@ pub fn day1_part2() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 fn fetch_data_day1() -> Result<(Vec<i32>, Vec<i32>), Box<dyn std::error::Error>> {
-    let data_string = read_input::read_input("data/day1.txt")?;
+    let data_string = read_input::read_input("data/2024/day1.txt")?;
     let mut v1: Vec<i32> = Vec::new();
     let mut v2: Vec<i32> = Vec::new();
 
@@ -115,7 +115,7 @@ pub fn day2_part2() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 fn fetch_data_day2() -> Result<Vec<Vec<i32>>, Box<dyn std::error::Error>> {
-    let data_string = read_input::read_input("data/day2.txt")?;
+    let data_string = read_input::read_input("data/2024/day2.txt")?;
     let mut data: Vec<Vec<i32>> = Vec::new();
 
     data_string.iter().for_each(|d| {
@@ -226,7 +226,7 @@ pub fn day3_part2() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 fn fetch_data_day3() -> Result<Vec<String>, Box<dyn std::error::Error>> {
-    let data_string = read_input::read_input("data/day3.txt")?;
+    let data_string = read_input::read_input("data/2024/day3.txt")?;
     Ok(data_string)
 }
 
@@ -323,7 +323,7 @@ pub fn day4_part2() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 fn fetch_data_day4() -> Result<Vec<String>, Box<dyn std::error::Error>> {
-    let data_string = read_input::read_input("data/day4.txt")?;
+    let data_string = read_input::read_input("data/2024/day4.txt")?;
     Ok(data_string)
 }
 
@@ -415,7 +415,7 @@ pub fn day5_part2() -> Result<(), Box<dyn std::error::Error>> {
 type Day5Result = Result<(HashMap<i32, HashSet<i32>>, Vec<Vec<i32>>), Box<dyn std::error::Error>>;
 
 fn fetch_data_day5() -> Day5Result {
-    let data_string = read_input::read_input("data/day5.txt")?;
+    let data_string = read_input::read_input("data/2024/day5.txt")?;
     let mut iter = data_string.iter();
     let mut rules: HashMap<i32, HashSet<i32>> = HashMap::new();
     let mut pages: Vec<Vec<i32>> = Vec::new();
@@ -647,7 +647,7 @@ pub fn day6_part2() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 fn fetch_data_day6() -> Result<Vec<String>, Box<dyn std::error::Error>> {
-    let data_string = read_input::read_input("data/day6.txt")?;
+    let data_string = read_input::read_input("data/2024/day6.txt")?;
     Ok(data_string)
 }
 
@@ -722,7 +722,7 @@ pub fn day7_part2() -> Result<(), Box<dyn std::error::Error>> {
 
 type Day7Result = Result<Vec<(u64, Vec<u64>)>, Box<dyn std::error::Error>>;
 fn fetch_data_day7() -> Day7Result {
-    let data_string = read_input::read_input("data/day7.txt")?;
+    let data_string = read_input::read_input("data/2024/day7.txt")?;
     let parsed_data = data_string
         .iter()
         .map(|s| {
@@ -851,7 +851,7 @@ pub fn day8_part2() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 fn fetch_data_day8() -> Result<Vec<Vec<char>>, Box<dyn std::error::Error>> {
-    let data_string = read_input::read_input("data/day8.txt")?;
+    let data_string = read_input::read_input("data/2024/day8.txt")?;
     let grid = data_string
         .iter()
         .map(|s| s.chars().collect())
@@ -990,7 +990,7 @@ pub fn day9_part2() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 fn fetch_data_day9() -> Result<Vec<u32>, Box<dyn std::error::Error>> {
-    let data_string = read_input::read_input("data/day9.txt")?;
+    let data_string = read_input::read_input("data/2024/day9.txt")?;
     let grid = data_string
         .first()
         .unwrap()
@@ -1086,7 +1086,7 @@ pub fn day10_part2() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 fn fetch_data_day10() -> Result<Vec<Vec<i32>>, Box<dyn std::error::Error>> {
-    let data_string = read_input::read_input("data/day10.txt")?;
+    let data_string = read_input::read_input("data/2024/day10.txt")?;
     let grid = data_string
         .iter()
         .map(|line| {
@@ -1229,7 +1229,7 @@ pub fn day11_part2() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 fn fetch_data_day11() -> Result<Vec<i64>, Box<dyn std::error::Error>> {
-    let data_string = read_input::read_input("data/day11.txt")?;
+    let data_string = read_input::read_input("data/2024/day11.txt")?;
     let data = data_string[0]
         .split(' ')
         .map(|f| f.parse::<i64>().unwrap())
@@ -1393,7 +1393,7 @@ pub fn day12_part2() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 fn fetch_data_day12() -> Result<Vec<Vec<char>>, Box<dyn std::error::Error>> {
-    let data_string = read_input::read_input("data/day12.txt")?;
+    let data_string = read_input::read_input("data/2024/day12.txt")?;
     let grid = data_string
         .iter()
         .map(|s| s.chars().collect::<Vec<char>>())

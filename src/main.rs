@@ -1,21 +1,11 @@
+mod bleeding;
 mod heartbreak;
 mod read_input;
-use heartbreak::*;
 
 fn main() {
     println!("advent of code\n");
 
-    let solutions = [
-        // day1_part1, day1_part2, day2_part1, day2_part2, day3_part1, day3_part2, day4_part1,
-        // day4_part2, day5_part1, day5_part2,
-        // day6_part1, day6_part2,
-        day10_part1,
-        day10_part2,
-        day11_part1,
-        day11_part2,
-        day12_part1,
-        day12_part2,
-    ];
+    let solutions = [bleeding::day1_part1, bleeding::day1_part2];
 
     for (day, sol) in solutions.iter().enumerate() {
         println!(
