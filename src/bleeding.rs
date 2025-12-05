@@ -2,7 +2,10 @@
 // solutions for 2025 advent of code
 
 use crate::read_input::{self};
-use std::{collections::HashSet, ops::Deref};
+use std::{
+    cmp::{Reverse, max},
+    collections::{BinaryHeap, HashSet},
+};
 
 pub fn day1_part1() -> Result<(), Box<dyn std::error::Error>> {
     let data = fetch_data_day1()?;
@@ -130,4 +133,67 @@ fn fetch_data_day2() -> Result<Vec<Vec<u64>>, Box<dyn std::error::Error>> {
     //     .for_each(|v| v.iter().for_each(|s| println!("{}", s)));
 
     Ok(ranges)
+}
+
+pub fn day3_part1() -> Result<(), Box<dyn std::error::Error>> {
+    let data = fetch_data_day3()?;
+    let mut result = 0;
+    for s in data {
+        let mut best_joltage = 0;
+        for (i, c1) in s.chars().enumerate() {
+            for c2 in s.chars().skip(i + 1) {
+                let d1 = c1.to_string().parse::<u32>().unwrap();
+                let d2 = c2.to_string().parse::<u32>().unwrap();
+                best_joltage = max(best_joltage, d1 * 10 + d2);
+            }
+        }
+        result += best_joltage;
+    }
+    println!("{}", result);
+    Ok(())
+}
+
+pub fn day3_part2() -> Result<(), Box<dyn std::error::Error>> {
+    let data = fetch_data_day3()?;
+    let mut result = 0;
+    for s in data {
+        let mut best_joltage = 0;
+        // Store the top 12 digits in a min heap
+        let mut top_digits: BinaryHeap<Reverse<(u64, usize)>> = BinaryHeap::new();
+        for (i, c1) in s.chars().enumerate().take(s.len().saturating_sub(12)) {
+            let d1 = c1.to_string().parse::<u64>().unwrap();
+            top_digits.push(Reverse((d1, i)));
+            for (j, c2) in s.chars().skip(i + 1).enumerate() {
+                let d2 = c2.to_string().parse::<u64>().unwrap();
+                if top_digits.len() >= 11 {
+                    top_digits.pop();
+                }
+                top_digits.push(Reverse((d2, j)));
+            }
+
+            let mut sorted_vec: Vec<(u64, usize)> = Vec::new();
+            while let Some(Reverse(item)) = top_digits.pop() {
+                sorted_vec.push(item);
+            }
+            sorted_vec.sort_by(|a, b| b.1.cmp(&a.1));
+            let joltage = sorted_vec
+                .iter()
+                .rev()
+                .enumerate()
+                .map(|(idx, v)| v.0 * 10u64.pow(11u32.saturating_sub(idx as u32)))
+                .sum::<u64>();
+
+            best_joltage = max(best_joltage, joltage);
+        }
+        println!("{}", best_joltage);
+
+        result += best_joltage;
+    }
+    println!("{}", result);
+    Ok(())
+}
+
+fn fetch_data_day3() -> Result<Vec<String>, Box<dyn std::error::Error>> {
+    let data_string = read_input::read_input("data/2025/day3.txt")?;
+    Ok(data_string)
 }
