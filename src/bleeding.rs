@@ -157,37 +157,37 @@ pub fn day3_part2() -> Result<(), Box<dyn std::error::Error>> {
     let data = fetch_data_day3()?;
     let mut result = 0;
     for s in data {
-        let mut best_joltage = 0;
-        // Store the top 12 digits in a min heap
-        let mut top_digits: BinaryHeap<Reverse<(u64, usize)>> = BinaryHeap::new();
-        for (i, c1) in s.chars().enumerate().take(s.len().saturating_sub(12)) {
-            let d1 = c1.to_string().parse::<u64>().unwrap();
-            top_digits.push(Reverse((d1, i)));
-            for (j, c2) in s.chars().skip(i + 1).enumerate() {
-                let d2 = c2.to_string().parse::<u64>().unwrap();
-                if top_digits.len() >= 11 {
-                    top_digits.pop();
+        let digits: Vec<u64> = s
+            .chars()
+            .filter_map(|c| c.to_digit(10).map(|d| d as u64))
+            .collect();
+        let mut stack: Vec<u64> = Vec::new();
+        for (i, &digit) in digits.iter().enumerate() {
+            // If we have more digits left
+            // than space available in the stack
+            // then keep popping if the top value is
+            // smaller than the incoming value
+            while let Some(&top) = stack.last() {
+                let remaining_digits = digits.len() - i;
+                let can_fill = (stack.len() - 1) + remaining_digits >= 12;
+                if digit > top && can_fill {
+                    stack.pop();
+                } else {
+                    break;
                 }
-                top_digits.push(Reverse((d2, j)));
             }
 
-            let mut sorted_vec: Vec<(u64, usize)> = Vec::new();
-            while let Some(Reverse(item)) = top_digits.pop() {
-                sorted_vec.push(item);
+            if stack.len() < 12 {
+                stack.push(digit);
             }
-            sorted_vec.sort_by(|a, b| b.1.cmp(&a.1));
-            let joltage = sorted_vec
-                .iter()
-                .rev()
-                .enumerate()
-                .map(|(idx, v)| v.0 * 10u64.pow(11u32.saturating_sub(idx as u32)))
-                .sum::<u64>();
-
-            best_joltage = max(best_joltage, joltage);
         }
-        println!("{}", best_joltage);
-
-        result += best_joltage;
+        let joltage: u64 = stack
+            .iter()
+            .enumerate()
+            .map(|(i, d)| d * 10u64.pow(11u32.saturating_sub(i as u32)))
+            .sum();
+        println!("{}", joltage);
+        result += joltage;
     }
     println!("{}", result);
     Ok(())
