@@ -234,6 +234,53 @@ pub fn day4_part1() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+pub fn day4_part2() -> Result<(), Box<dyn std::error::Error>> {
+    let mut data = fetch_data_day4()?;
+    let rows = data.len();
+    let cols = data[0].len();
+    let dirs: [(i32, i32); 8] = [
+        (0, 1),
+        (-1, 1),
+        (-1, 0),
+        (-1, -1),
+        (0, -1),
+        (1, -1),
+        (1, 0),
+        (1, 1),
+    ];
+    let in_range = |i: i32, j: i32| i >= 0 && j >= 0 && (i as usize) < rows && (j as usize) < cols;
+    let mut result = 0;
+    loop {
+        let mut targets: Vec<(usize, usize)> = Vec::new();
+        for i in 0..data.len() {
+            for j in 0..data[0].len() {
+                if data[i][j] == '@' {
+                    let mut count = 0;
+                    for dir in dirs {
+                        let new_i = i as i32 + dir.0;
+                        let new_j = j as i32 + dir.1;
+                        if in_range(new_i, new_j) && data[new_i as usize][new_j as usize] == '@' {
+                            count += 1;
+                        }
+                    }
+                    if count < 4 {
+                        result += 1;
+                        targets.push((i, j));
+                    }
+                }
+            }
+        }
+        if targets.is_empty() {
+            break;
+        }
+        for target in targets {
+            data[target.0][target.1] = '.';
+        }
+    }
+    println!("{}", result);
+    Ok(())
+}
+
 fn fetch_data_day4() -> Result<Vec<Vec<char>>, Box<dyn std::error::Error>> {
     let data_string = read_input::read_input("data/2025/day4.txt")?;
     let grid = data_string
