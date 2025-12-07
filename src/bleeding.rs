@@ -290,3 +290,63 @@ fn fetch_data_day4() -> Result<Vec<Vec<char>>, Box<dyn std::error::Error>> {
 
     Ok(grid)
 }
+
+pub fn day5_part1() -> Result<(), Box<dyn std::error::Error>> {
+    let (fresh_ranges, product_ids) = fetch_data_day5()?;
+    let mut result = 0;
+    for product_id in product_ids {
+        for range in &fresh_ranges {
+            if product_id >= range.0 && product_id <= range.1 {
+                result += 1;
+                break;
+            }
+        }
+    }
+    println!("{}", result);
+    Ok(())
+}
+
+pub fn day5_part2() -> Result<(), Box<dyn std::error::Error>> {
+    let (mut fresh_ranges, product_ids) = fetch_data_day5()?;
+    fresh_ranges.sort_by_key(|r| r.0);
+
+    let mut merged_ranges: Vec<(u64, u64)> = Vec::new();
+    if let Some(range) = fresh_ranges.first() {
+        merged_ranges.push(*range);
+    }
+    for range in fresh_ranges.iter().skip(1) {
+        let last_merge = merged_ranges.last_mut().unwrap();
+        if range.0 < last_merge.1 + 1 {
+            last_merge.1 = last_merge.1.max(range.1);
+        } else {
+            merged_ranges.push(*range);
+        }
+    }
+    let mut result = 0;
+    for range in merged_ranges {
+        result += range.1 - range.0 + 1;
+    }
+    println!("{}", result);
+    Ok(())
+}
+
+fn fetch_data_day5() -> Result<(Vec<(u64, u64)>, Vec<u64>), Box<dyn std::error::Error>> {
+    let data_string = read_input::read_input("data/2025/day5.txt")?;
+    let mut fresh_ranges: Vec<(u64, u64)> = Vec::new();
+
+    let mut curr: usize = 0;
+    while !data_string.get(curr).unwrap().is_empty() {
+        let range = data_string[curr]
+            .split('-')
+            .map(|v| v.parse::<u64>().unwrap())
+            .collect::<Vec<u64>>();
+        fresh_ranges.push((range[0], range[1]));
+        curr += 1;
+    }
+    let mut product_ids: Vec<u64> = Vec::new();
+    for id in data_string.iter().skip(curr + 1) {
+        product_ids.push(id.parse::<u64>().unwrap());
+    }
+
+    Ok((fresh_ranges, product_ids))
+}
