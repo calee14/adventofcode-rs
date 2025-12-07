@@ -2,6 +2,7 @@
 // solutions for 2025 advent of code
 
 use crate::read_input::{self};
+use core::num;
 use std::{
     cmp::{Reverse, max},
     collections::{BinaryHeap, HashSet},
@@ -349,4 +350,109 @@ fn fetch_data_day5() -> Result<(Vec<(u64, u64)>, Vec<u64>), Box<dyn std::error::
     }
 
     Ok((fresh_ranges, product_ids))
+}
+
+pub fn day6_part1() -> Result<(), Box<dyn std::error::Error>> {
+    let (numbers, operators) = fetch_data_day6()?;
+
+    let mut result = 0;
+    for col in 0..operators.len() {
+        let operator = &operators[col];
+        result += if operator == "+" {
+            let mut answer = 0;
+            for row in 0..numbers.len() {
+                answer += numbers[row][col];
+            }
+            answer
+        } else {
+            let mut answer = 1;
+            for row in 0..numbers.len() {
+                answer *= numbers[row][col];
+            }
+            answer
+        }
+    }
+    println!("{}", result);
+    Ok(())
+}
+
+fn fetch_data_day6() -> Result<(Vec<Vec<i64>>, Vec<String>), Box<dyn std::error::Error>> {
+    let data_string = read_input::read_input("data/2025/day6.txt")?;
+    let numbers = data_string
+        .iter()
+        .take(data_string.len() - 1)
+        .map(|row| {
+            row.split(' ')
+                .filter(|s| !s.is_empty())
+                .map(|num| num.parse::<i64>().unwrap())
+                .collect::<Vec<i64>>()
+        })
+        .collect::<Vec<Vec<i64>>>();
+    let operators = data_string
+        .last()
+        .unwrap()
+        .split(' ')
+        .filter(|s| !s.is_empty())
+        .map(|s| s.to_string())
+        .collect::<Vec<String>>();
+
+    Ok((numbers, operators))
+}
+
+pub fn day6_part2() -> Result<(), Box<dyn std::error::Error>> {
+    let (numbers, operators) = fetch_data_day6_part2()?;
+
+    let mut result = 0;
+    for (i, operator) in operators.iter().enumerate() {
+        let prob_idx = operators.len() - i - 1;
+        result += if operator == "+" {
+            numbers[prob_idx].iter().sum()
+        } else {
+            numbers[prob_idx].iter().product::<i64>()
+        };
+    }
+    println!("{}", result);
+    Ok(())
+}
+
+fn fetch_data_day6_part2() -> Result<(Vec<Vec<i64>>, Vec<String>), Box<dyn std::error::Error>> {
+    let data_string = read_input::read_input("data/2025/day6.txt")?;
+    let mut numbers: Vec<Vec<i64>> = Vec::new();
+    let mut problem: Vec<i64> = Vec::new();
+    for i in (0..data_string[0].len()).rev() {
+        let mut num_string = String::new();
+        for j in data_string.iter().take(data_string.len() - 1) {
+            if let Some(char) = j.chars().nth(i) {
+                num_string.push(char);
+            }
+        }
+        // Encoutner full column of empty
+        // space. Store problem and work
+        // on creating the next one
+        if num_string.trim().is_empty() {
+            numbers.push(problem.clone());
+            problem.clear();
+        } else {
+            problem.push(num_string.trim().parse::<i64>().unwrap());
+        }
+    }
+
+    // Push final problem set
+    // into vector
+    numbers.push(problem);
+
+    // numbers.iter().for_each(|n| {
+    //     n.iter().for_each(|s| print!("{} ", s));
+    //     println!("");
+    // });
+
+    let operators = data_string
+        .last()
+        .unwrap()
+        .split(' ')
+        .filter(|s| !s.is_empty())
+        .map(|s| s.to_string())
+        .collect::<Vec<String>>();
+
+    Ok((numbers, operators))
 }
