@@ -18,6 +18,7 @@ fn main() {
         bleeding::day5_part2,
         bleeding::day6_part1,
         bleeding::day6_part2,
+        bleeding::day7_part1,
     ];
 
     for (day, sol) in solutions.iter().enumerate() {

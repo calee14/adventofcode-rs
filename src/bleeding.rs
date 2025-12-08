@@ -456,3 +456,63 @@ fn fetch_data_day6_part2() -> Result<(Vec<Vec<i64>>, Vec<String>), Box<dyn std::
 
     Ok((numbers, operators))
 }
+
+fn day7_part1_helper(i: i32, j: i32, data: &mut Vec<Vec<char>>) -> u32 {
+    let mut result = 0;
+
+    let rows = data.len();
+    let cols = data[0].len();
+
+    let in_range = |i: i32, j: i32| i >= 0 && j >= 0 && (i as usize) < rows && (j as usize) < cols;
+
+    let mut curr_i = i;
+    while in_range(curr_i + 1, j)
+        && data[curr_i as usize][j as usize] != '^'
+        && data[curr_i as usize][j as usize] != '|'
+    {
+        data[curr_i as usize][j as usize] = '|';
+        curr_i += 1;
+    }
+    if data[curr_i as usize][j as usize] == '^' {
+        result += 1;
+        if in_range(curr_i, j + 1) && data[curr_i as usize][(j + 1) as usize] != '|' {
+            result += day7_part1_helper(curr_i, j + 1, data);
+        }
+        if in_range(curr_i, j - 1) && data[curr_i as usize][(j - 1) as usize] != '|' {
+            result += day7_part1_helper(curr_i, j - 1, data);
+        }
+    }
+
+    result
+}
+
+pub fn day7_part1() -> Result<(), Box<dyn std::error::Error>> {
+    let mut data = fetch_data_day7()?;
+    let mut start_pos = (0, 0);
+    for (i, row) in data.iter().enumerate() {
+        for (j, c) in row.iter().enumerate() {
+            if *c == 'S' {
+                start_pos = (i, j);
+                break;
+            }
+        }
+        if start_pos != (0, 0) {
+            break;
+        }
+    }
+
+    let result = day7_part1_helper(start_pos.0 as i32, start_pos.1 as i32, &mut data);
+    println!("{}", result);
+
+    Ok(())
+}
+
+fn fetch_data_day7() -> Result<Vec<Vec<char>>, Box<dyn std::error::Error>> {
+    let data_string = read_input::read_input("data/2025/day7.txt")?;
+    let grid = data_string
+        .iter()
+        .map(|s| s.chars().collect::<Vec<char>>())
+        .collect::<Vec<Vec<char>>>();
+
+    Ok(grid)
+}
