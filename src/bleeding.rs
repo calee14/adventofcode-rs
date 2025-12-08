@@ -5,7 +5,7 @@ use crate::read_input::{self};
 use core::num;
 use std::{
     cmp::{Reverse, max},
-    collections::{BinaryHeap, HashSet},
+    collections::{BinaryHeap, HashMap, HashSet},
 };
 
 pub fn day1_part1() -> Result<(), Box<dyn std::error::Error>> {
@@ -502,6 +502,63 @@ pub fn day7_part1() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     let result = day7_part1_helper(start_pos.0 as i32, start_pos.1 as i32, &mut data);
+    println!("{}", result);
+
+    Ok(())
+}
+
+fn day7_part2_helper(
+    i: i32,
+    j: i32,
+    data: &mut Vec<Vec<char>>,
+    memo: &mut HashMap<(i32, i32), u64>,
+) -> u64 {
+    if let Some(&res) = memo.get(&(i, j)) {
+        return res;
+    }
+    let mut result = 0;
+
+    let rows = data.len();
+    let cols = data[0].len();
+
+    let in_range = |i: i32, j: i32| i >= 0 && j >= 0 && (i as usize) < rows && (j as usize) < cols;
+
+    let mut curr_i = i;
+    while in_range(curr_i + 1, j) && data[curr_i as usize][j as usize] != '^' {
+        curr_i += 1;
+    }
+    if !in_range(curr_i + 1, j) {
+        return 1;
+    }
+
+    if data[curr_i as usize][j as usize] == '^' {
+        if in_range(curr_i, j + 1) {
+            result += day7_part2_helper(curr_i, j + 1, data, memo);
+        }
+        if in_range(curr_i, j - 1) {
+            result += day7_part2_helper(curr_i, j - 1, data, memo);
+        }
+    }
+    memo.insert((i, j), result);
+    result
+}
+pub fn day7_part2() -> Result<(), Box<dyn std::error::Error>> {
+    let mut data = fetch_data_day7()?;
+    let mut start_pos = (0, 0);
+    for (i, row) in data.iter().enumerate() {
+        for (j, c) in row.iter().enumerate() {
+            if *c == 'S' {
+                start_pos = (i, j);
+                break;
+            }
+        }
+        if start_pos != (0, 0) {
+            break;
+        }
+    }
+
+    let mut memo = HashMap::new();
+    let result = day7_part2_helper(start_pos.0 as i32, start_pos.1 as i32, &mut data, &mut memo);
     println!("{}", result);
 
     Ok(())
