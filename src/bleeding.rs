@@ -4,7 +4,7 @@
 use crate::read_input::{self};
 use core::num;
 use std::{
-    cmp::{Reverse, max},
+    cmp::{Ordering, Reverse, max},
     collections::{BinaryHeap, HashMap, HashSet},
 };
 
@@ -572,4 +572,150 @@ fn fetch_data_day7() -> Result<Vec<Vec<char>>, Box<dyn std::error::Error>> {
         .collect::<Vec<Vec<char>>>();
 
     Ok(grid)
+}
+
+pub struct UnionFind {
+    parent: Vec<usize>,
+    rank: Vec<usize>,
+    size: Vec<usize>,
+}
+
+impl UnionFind {
+    pub fn new(size: usize) -> Self {
+        Self {
+            parent: (0..size).collect(),
+            rank: vec![0; size],
+            size: vec![1; size],
+        }
+    }
+
+    pub fn find(&mut self, x: usize) -> usize {
+        if self.parent[x] != x {
+            self.parent[x] = self.find(self.parent[x]); // path compression
+        }
+        self.parent[x]
+    }
+
+    pub fn union(&mut self, x: usize, y: usize) -> bool {
+        let root_x = self.find(x);
+        let root_y = self.find(y);
+
+        if root_x == root_y {
+            return false; // already in same set
+        }
+
+        // union by rank
+        match self.rank[root_x].cmp(&self.rank[root_y]) {
+            std::cmp::Ordering::Less => {
+                self.parent[root_x] = root_y;
+                self.size[root_y] += self.size[root_x];
+            }
+            std::cmp::Ordering::Greater => {
+                self.parent[root_y] = root_x;
+                self.size[root_x] += self.size[root_y];
+            }
+            std::cmp::Ordering::Equal => {
+                self.parent[root_y] = root_x;
+                self.size[root_x] += self.size[root_y];
+                self.rank[root_x] += 1;
+            }
+        }
+        true
+    }
+
+    // Get the size of the set containing x
+    pub fn set_size(&mut self, x: usize) -> usize {
+        let root = self.find(x);
+        self.size[root]
+    }
+
+    pub fn connected(&mut self, x: usize, y: usize) -> bool {
+        self.find(x) == self.find(y)
+    }
+}
+
+#[derive(PartialEq)]
+struct MinHeapItem(f64, (usize, usize));
+
+impl Eq for MinHeapItem {}
+
+impl Ord for MinHeapItem {
+    fn cmp(&self, other: &Self) -> Ordering {
+        other.0.partial_cmp(&self.0).unwrap() // reversed for min heap, only compares f64
+    }
+}
+
+impl PartialOrd for MinHeapItem {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+pub fn day8_part1() -> Result<(), Box<dyn std::error::Error>> {
+    let points = fetch_data_day8()?;
+
+    // Compute distances between all points
+    let mut min_dist_heap: BinaryHeap<MinHeapItem> = BinaryHeap::new();
+    for (i, p1) in points.iter().enumerate() {
+        for (j, p2) in points.iter().enumerate().skip(i + 1) {
+            let dist = p1
+                .iter()
+                .enumerate()
+                .map(|(k, val)| (val - p2[k]).powf(2f64))
+                .sum::<f64>();
+            min_dist_heap.push(MinHeapItem(dist, (i, j)));
+        }
+    }
+
+    // Create Disjoint set (union find)
+    // data structure and put all points
+    // into individual circuit (set)
+    let mut union_find = UnionFind::new(points.len());
+
+    for _ in 0..1000 {
+        if let Some(MinHeapItem(_, (i, j))) = min_dist_heap.pop() {
+            if !union_find.connected(i, j) {
+                union_find.union(i, j);
+            }
+        } else {
+            break;
+        }
+    }
+
+    let mut all_sets: HashSet<usize> = HashSet::new();
+    for point in 0..points.len() {
+        let set = union_find.find(point);
+        all_sets.insert(set);
+    }
+
+    let mut min_heap: BinaryHeap<Reverse<usize>> = BinaryHeap::new();
+    for set in all_sets {
+        let set_size = union_find.set_size(set);
+        min_heap.push(Reverse(set_size));
+
+        if min_heap.len() > 3 {
+            min_heap.pop();
+        }
+    }
+    println!(
+        "{}",
+        min_heap
+            .into_iter()
+            .map(|Reverse(val)| val)
+            .product::<usize>()
+    );
+    Ok(())
+}
+
+fn fetch_data_day8() -> Result<Vec<Vec<f64>>, Box<dyn std::error::Error>> {
+    let data_string = read_input::read_input("data/2025/day8.txt")?;
+    let points = data_string
+        .iter()
+        .map(|s| {
+            s.split(',')
+                .map(|n| n.parse::<f64>().unwrap())
+                .collect::<Vec<f64>>()
+        })
+        .collect::<Vec<Vec<f64>>>();
+    Ok(points)
 }
