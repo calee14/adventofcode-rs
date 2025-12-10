@@ -6,6 +6,7 @@ use core::num;
 use std::{
     cmp::{Ordering, Reverse, max},
     collections::{BinaryHeap, HashMap, HashSet},
+    ops::Mul,
 };
 
 pub fn day1_part1() -> Result<(), Box<dyn std::error::Error>> {
@@ -704,6 +705,62 @@ pub fn day8_part1() -> Result<(), Box<dyn std::error::Error>> {
             .map(|Reverse(val)| val)
             .product::<usize>()
     );
+    Ok(())
+}
+
+pub fn day8_part2() -> Result<(), Box<dyn std::error::Error>> {
+    let points = fetch_data_day8()?;
+
+    // Compute distances between all points
+    let mut min_dist_heap: BinaryHeap<MinHeapItem> = BinaryHeap::new();
+    for (i, p1) in points.iter().enumerate() {
+        for (j, p2) in points.iter().enumerate().skip(i + 1) {
+            let dist = p1
+                .iter()
+                .enumerate()
+                .map(|(k, val)| (val - p2[k]).powf(2f64))
+                .sum::<f64>();
+            min_dist_heap.push(MinHeapItem(dist, (i, j)));
+        }
+    }
+
+    let mut result = 0.0;
+    // Create Disjoint set (union find)
+    // data structure and put all points
+    // into individual circuit (set)
+    let mut union_find = UnionFind::new(points.len());
+
+    while let Some(MinHeapItem(_, (i, j))) = min_dist_heap.pop() {
+        if !union_find.connected(i, j) {
+            union_find.union(i, j);
+            result = points[i].first().unwrap().mul(points[j].first().unwrap());
+        }
+    }
+
+    let mut all_sets: HashSet<usize> = HashSet::new();
+    for point in 0..points.len() {
+        let set = union_find.find(point);
+        all_sets.insert(set);
+    }
+
+    let mut min_heap: BinaryHeap<Reverse<usize>> = BinaryHeap::new();
+    for set in all_sets {
+        let set_size = union_find.set_size(set);
+        min_heap.push(Reverse(set_size));
+
+        if min_heap.len() > 3 {
+            min_heap.pop();
+        }
+    }
+    println!(
+        "{}",
+        min_heap
+            .into_iter()
+            .map(|Reverse(val)| val)
+            .product::<usize>()
+    );
+
+    println!("{}", result);
     Ok(())
 }
 
