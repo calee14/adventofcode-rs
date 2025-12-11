@@ -6,7 +6,7 @@ use core::num;
 use std::{
     cmp::{Ordering, Reverse, max},
     collections::{BinaryHeap, HashMap, HashSet},
-    ops::Mul,
+    ops::{Mul, Sub},
 };
 
 pub fn day1_part1() -> Result<(), Box<dyn std::error::Error>> {
@@ -774,5 +774,40 @@ fn fetch_data_day8() -> Result<Vec<Vec<f64>>, Box<dyn std::error::Error>> {
                 .collect::<Vec<f64>>()
         })
         .collect::<Vec<Vec<f64>>>();
+    Ok(points)
+}
+
+pub fn day9_part1() -> Result<(), Box<dyn std::error::Error>> {
+    let data = fetch_data_day9()?;
+    let mut result = 0;
+    for (i, p1) in data.iter().enumerate() {
+        for (_, p2) in data.iter().enumerate().skip(i + 1) {
+            let w = p1[0].sub(p2[0]).abs() + 1;
+            let h = p1[1].sub(p2[1]).abs() + 1;
+            result = max(result, w * h);
+        }
+    }
+    println!("{}", result);
+    Ok(())
+}
+
+pub fn day9_part2() -> Result<(), Box<dyn std::error::Error>> {
+    let data = fetch_data_day9()?;
+    let mut result = 0;
+
+    println!("{}", result);
+    Ok(())
+}
+
+fn fetch_data_day9() -> Result<Vec<Vec<i64>>, Box<dyn std::error::Error>> {
+    let data_string = read_input::read_input("data/2025/day9.txt")?;
+    let points = data_string
+        .iter()
+        .map(|s| {
+            s.split(',')
+                .map(|n| n.parse::<i64>().unwrap())
+                .collect::<Vec<i64>>()
+        })
+        .collect::<Vec<Vec<i64>>>();
     Ok(points)
 }
