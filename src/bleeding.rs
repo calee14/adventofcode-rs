@@ -930,6 +930,7 @@ fn segments_intersect(p1: (i64, i64), p2: (i64, i64), p3: (i64, i64), p4: (i64, 
     false
 }
 
+// Uses the raycast solution
 pub fn day9_part2() -> Result<(), Box<dyn std::error::Error>> {
     let data = fetch_data_day9()?;
     let points: Vec<(i64, i64)> = data.iter().map(|v| (v[0], v[1])).collect();
