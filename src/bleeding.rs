@@ -791,11 +791,165 @@ pub fn day9_part1() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+fn is_rectangle_inside(
+    min_x: i64,
+    max_x: i64,
+    min_y: i64,
+    max_y: i64,
+    polygon: &[(i64, i64)],
+) -> bool {
+    let corners = [
+        (min_x, min_y),
+        (min_x, max_y),
+        (max_x, min_y),
+        (max_x, max_y),
+    ];
+    for &corner in &corners {
+        if !point_in_polygon(corner, polygon) {
+            return false;
+        }
+    }
+    !any_edge_crosses_rectangle(min_x, max_x, min_y, max_y, polygon)
+}
+fn point_in_polygon(point: (i64, i64), polygon: &[(i64, i64)]) -> bool {
+    let (px, py) = point;
+    let mut inside = false;
+    let n = polygon.len();
+    for i in 0..n {
+        // Make an edge with next point
+        // in polygon then check if the
+        // input point remains all on the same
+        // side of all edges in polygon
+        let j = (i + 1) % n;
+        let (xi, yi) = polygon[i];
+        let (xj, yj) = polygon[j];
+        if ((yi > py) != (yj > py)) && (px < (xj - xi) * (py - yi) / (yj - yi) + xi) {
+            inside = !inside;
+        }
+    }
+    inside
+}
+fn any_edge_crosses_rectangle(
+    min_x: i64,
+    max_x: i64,
+    min_y: i64,
+    max_y: i64,
+    polygon: &[(i64, i64)],
+) -> bool {
+    let n = polygon.len();
+    for i in 0..n {
+        let j = (i + 1) % n;
+        let p1 = polygon[i];
+        let p2 = polygon[j];
+        if (p1.0 < min_x && p2.0 < min_x)
+            || (p1.0 > max_x && p2.0 > max_x)
+            || (p1.1 < min_y && p2.1 < min_y)
+            || (p1.1 > max_y && p2.1 > max_y)
+        {
+            continue;
+        }
+        if segment_intersects_rectangle(p1, p2, min_x, max_x, min_y, max_y) {
+            return true;
+        }
+    }
+    false
+}
+fn segment_intersects_rectangle(
+    (x1, y1): (i64, i64),
+    (x2, y2): (i64, i64),
+    min_x: i64,
+    max_x: i64,
+    min_y: i64,
+    max_y: i64,
+) -> bool {
+    // If both endpoints are on the same
+    // edge then it won't count as an
+    // intersect
+    if x1 <= min_x && x2 <= min_x {
+        return false;
+    }
+    if x1 >= max_x && x2 >= max_x {
+        return false;
+    }
+    if y1 <= min_y && y2 <= min_y {
+        return false;
+    }
+    if y1 >= max_x && y2 >= max_x {
+        return false;
+    }
+
+    let p1_on_boundary = x1 == min_x || x1 == max_x || y1 == min_y || y1 == max_y;
+    let p2_on_boundary = x2 == min_x || x2 == max_x || y2 == min_y || y2 == max_y;
+
+    // If both points are on the boundary, it's not crossing through
+    if p1_on_boundary && p2_on_boundary {
+        return false;
+    }
+    let rect_segments = [
+        ((min_x, min_y), (max_x, min_y)), // bottom
+        ((max_x, min_y), (max_x, max_y)), // right
+        ((max_x, max_y), (min_x, max_y)), // top
+        ((min_x, max_y), (min_x, min_y)), // left
+    ];
+    for &(r1, r2) in &rect_segments {
+        if segments_intersect((x1, y1), (x2, y2), r1, r2) {
+            return true;
+        }
+    }
+    false
+}
+fn segments_intersect(p1: (i64, i64), p2: (i64, i64), p3: (i64, i64), p4: (i64, i64)) -> bool {
+    fn orientation(a: (i64, i64), b: (i64, i64), c: (i64, i64)) -> i64 {
+        let val = (b.1 - a.1) * (c.0 - b.0) - (b.0 - a.0) * (c.1 - b.1);
+        val.signum()
+    }
+    fn on_segment(a: (i64, i64), b: (i64, i64), c: (i64, i64)) -> bool {
+        b.0 <= a.0.max(c.0) && b.0 >= a.0.min(c.0) && b.1 <= a.1.max(c.1) && b.1 >= a.1.min(c.1)
+    }
+    let o1 = orientation(p1, p2, p3);
+    let o2 = orientation(p1, p2, p4);
+    let o3 = orientation(p3, p4, p1);
+    let o4 = orientation(p3, p4, p2);
+    // General case
+    if o1 != o2 && o3 != o4 {
+        return true;
+    }
+    // Special cases: collinear points
+    if o1 == 0 && on_segment(p1, p3, p2) {
+        return true;
+    }
+    if o2 == 0 && on_segment(p1, p4, p2) {
+        return true;
+    }
+    if o3 == 0 && on_segment(p3, p1, p4) {
+        return true;
+    }
+    if o4 == 0 && on_segment(p3, p2, p4) {
+        return true;
+    }
+    false
+}
+
 pub fn day9_part2() -> Result<(), Box<dyn std::error::Error>> {
     let data = fetch_data_day9()?;
-    let mut result = 0;
+    let points: Vec<(i64, i64)> = data.iter().map(|v| (v[0], v[1])).collect();
 
-    println!("{}", result);
+    let mut max_area = 0;
+    for i in 0..points.len() {
+        for j in (i + 1)..points.len() {
+            let (x1, y1) = points[i];
+            let (x2, y2) = points[j];
+            let min_x = x1.min(x2);
+            let max_x = x1.max(x2);
+            let min_y = y1.min(y2);
+            let max_y = y1.max(y2);
+            if is_rectangle_inside(min_x, max_x, min_y, max_y, &points) {
+                let area = (max_x - min_x + 1) * (max_y - min_y + 1);
+                max_area = max_area.max(area);
+            }
+        }
+    }
+    print!("{}", max_area);
     Ok(())
 }
 
